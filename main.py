@@ -1,6 +1,3 @@
-
-# main.py
-# API local con FastAPI para inferencia del modelo heart_model.pkl
 import os
 import joblib
 import pandas as pd
@@ -10,7 +7,6 @@ from pydantic import BaseModel, Field, field_validator
 
 MODEL_PATH = os.getenv("MODEL_PATH", "heart_model.pkl")
 
-# --- Esquemas ---
 ALLOWED_SEX = {"M", "F"}
 ALLOWED_CHEST = {"TA", "ATA", "NAP", "ASY"}
 ALLOWED_ECG = {"Normal", "ST", "LVH"}
@@ -30,7 +26,6 @@ class HeartInput(BaseModel):
     Oldpeak: float = Field(..., ge=-5, le=10)
     ST_Slope: str
 
-    # Normalizaciones/validaciones
     @field_validator("Sex")
     @classmethod
     def _val_sex(cls, v):
@@ -51,7 +46,6 @@ class HeartInput(BaseModel):
     @classmethod
     def _val_ecg(cls, v):
         v = str(v).strip()
-        # Capitalizar primera letra salvo LVH
         mapping = {"normal":"Normal", "st":"ST", "lvh":"LVH", "LVH":"LVH", "ST":"ST", "Normal":"Normal"}
         v = mapping.get(v, v)
         if v not in ALLOWED_ECG:
@@ -80,7 +74,6 @@ class PredictResponse(BaseModel):
 class BatchRequest(BaseModel):
     items: List[HeartInput]
 
-# --- App ---
 app = FastAPI(title="Heart Failure Prediction API", version="1.0.0")
 
 # Cargar modelo al iniciar

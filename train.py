@@ -1,6 +1,5 @@
 import kagglehub
 
-# Download latest version
 path = kagglehub.dataset_download("fedesoriano/heart-failure-prediction")
 
 print("Path to dataset files:", path)
@@ -22,18 +21,15 @@ import pandas as pd
 
 df = pd.read_csv(path + "/heart.csv")
 
-# 2) Split
 X = df.drop(columns=["HeartDisease"])
 y = df["HeartDisease"]
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# 3) Columnas
 cat_cols = ["Sex","ChestPainType","RestingECG","ExerciseAngina","ST_Slope"]
 num_cols = [c for c in X.columns if c not in cat_cols]
 
-# 4) Prepro
 num_pipe = Pipeline([
     ("imputer", SimpleImputer(strategy="median")),
     ("scaler", StandardScaler())
@@ -69,7 +65,6 @@ scoring = {
 
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-# 6) CV rápido
 cv_log = cross_validate(logreg, X_train, y_train, cv=cv, scoring=scoring, n_jobs=-1)
 cv_rf  = cross_validate(rf,    X_train, y_train, cv=cv, scoring=scoring, n_jobs=-1)
 
@@ -83,11 +78,9 @@ def summarize(name, cvres):
 summarize("LogReg (CV)", cv_log)
 summarize("RandomForest (CV)", cv_rf)
 
-# 7) Entrenar el mejor (elige por AUC/recall; aquí por simplicidad usamos LogReg)
 best = logreg
 best.fit(X_train, y_train)
 
-# 8) Eval holdout
 from sklearn.metrics import classification_report, roc_auc_score
 proba = best.predict_proba(X_test)[:,1]
 pred  = (proba >= 0.5).astype(int)
@@ -95,6 +88,5 @@ print("\nHoldout:")
 print("  ROC-AUC:", roc_auc_score(y_test, proba).round(3))
 print(classification_report(y_test, pred, digits=3))
 
-# 9) Guardar pipeline completo
 joblib.dump(best, "heart_model.pkl")
 print("\nModelo guardado en heart_model.pkl")
